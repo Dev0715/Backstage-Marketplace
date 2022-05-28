@@ -1,0 +1,280 @@
+.delete-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  border: 1px solid #887bff;
+  background-color: #14142f;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  z-index: 1000;
+  .delete__btn {
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    font-weight: bold;
+  }
+}
+.text-error {
+  color: darkred;
+}
+
+.header__profile-menu a {
+  color: #bdbdbd !important;
+  cursor: pointer;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+  font-size: 12px;
+  height: 35px;
+}
+
+.btn_new_blog {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}
+
+.main__author {
+  background-position-x: center;
+  background-position-y: center;
+  background-size: cover;
+  background-repeat-x: no-repeat;
+  background-repeat-y: no-repeat;
+}
+
+.share__link {
+  margin-right: 10px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.share__link--te {
+  background-color: #0088cc;
+}
+
+.share__link--discord {
+  background-color: #8c9eff;
+}
+
+.share__link--in {
+  background-color: #bc298d;
+}
+
+.share__link--tiktok {
+  background-color: #c01900;
+}
+
+.greenpass {
+  margin-left: 15px;
+}
+
+.greenpass-text {
+  display: inline-block;
+  vertical-align: middle;
+  color: #abd3b4;
+  font-size: 13px;
+  line-height: 17px;
+}
+
+.event__clock {
+  font-size: 18px;
+  line-height: 100%;
+  color: #fff;
+  margin-top: 10px;
+}
+
+.text-editor-wrapper {
+  width: 100%;
+
+  & *::selection {
+    background: #3390ff;
+    color: white;
+  }
+
+  & > div {
+    height: 400px;
+    overflow-y: auto;
+  }
+}
+
+.article__content img {
+  width: inherit;
+  max-width: 100%;
+}
+
+.article__content {
+  .img-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 60px;
+
+    .article__category {
+      position: absolute;
+    }
+
+    .article__date {
+      position: absolute;
+      right: 0;
+    }
+  }
+}
+
+.card__delete_btn {
+  position: absolute !important;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+}
+
+//--------------------------------------
+
+.addon-group {
+  margin-bottom: 10px;
+}
+
+.padding-div {
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-bottom: 10px;
+  order: 3;
+}
+
+.order-short {
+  order: 1;
+}
+
+.order-long {
+  order: 2;
+  display: flex;
+  align-items: flex-end;
+}
+
+.order-icon {
+  display: flex;
+  justify-content: center;
+}
+
+.icon-btn {
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.add-btn {
+  background-color:#6c6cd1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.remove-btn {
+  background-color: #91584f;
+}
+
+input:disabled {
+  background: transparent;
+  border-color: white;
+}
+
+textarea:disabled {
+  background: transparent;
+  border-color: white;
+}
+
+textarea {
+  overflow: hidden;
+}
+
+@media screen and (max-width: 1200px) {
+  .order-short {
+    order: 2;
+  }
+  
+  .order-long {
+    order: 1;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .order-short {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+
+.addon-icon {
+  margin-bottom: 20px;
+}
+
+.addon-icon img {
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.addon-icon img:hover {
+  opacity: 0.5;
+}
+
+.addon-box img {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+//--------------------------------------
+
+.addon-details {
+  border-bottom: 0px;
+}
+
+.addon-details-box {
+  border-top: 0px;
+  padding-top: 0px !important;
+  margin-top: 0px !important;
+
+  img {
+    width: 30px;
+  }
+}
+
+.addon-tooltip {
+  font-size: 14px;
+}
+
+//----------------------------------------
+
+.hot__collection {
+  margin-top: 35px !important;
+}
+
+//----------------------------------------
+
+.activity-mint-wrapper {
+  display: flex;
+  flex-direction: column;
+  color: white;
+  font-size: 16px;
+  gap: 4px;
+}
+
+.activity-mint-btns {
+  display: flex;
+  gap: 4px;
+}
+
+//-----------------------------------------
+.top-right-amount {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: gray;
+  font-size: 16px;
+}
