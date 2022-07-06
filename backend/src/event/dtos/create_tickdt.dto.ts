@@ -21,6 +21,11 @@ export class CreateTicketDto {
   wallet_address: string;
 
   @ApiProperty()
+  // @IsString()
+  // @IsNotEmpty()
+   blockchain: string;
+
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   pay_order_id: string;

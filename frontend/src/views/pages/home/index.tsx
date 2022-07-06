@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import Explorers from "./explorers";
+import { isMobile } from "react-device-detect";
 import GetStarted from "./getstarted";
 import Hotcollections from "./hotcollections";
 import Lastevents from "./lastevents";
@@ -9,15 +8,21 @@ import Topsellers from "./topsellers";
 const Home = () => {
   return (
     <main className="main">
-      <div className="home">
-        <Nftevents />
-      </div>
-      <div className="container">
-        <Hotcollections/>
+      <Nftevents />
+      <div
+        className="container"
+        style={{
+          padding: 0,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Hotcollections />
         <Lastevents />
         <Topsellers />
-        <Explorers />        
+        {/* <Explorers />         */}
         <GetStarted />
+        {!isMobile && <div style={{ height: 350 }}></div>}
       </div>
     </main>
   );

@@ -1,17 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
-import { isMobile } from "react-device-detect";
-import { Link } from "react-router-dom";
-import {
-  getLatestEventCards,
-  deleteEventCardById,
-} from "../../../helper/event";
-import OwlCarousel from "react-owl-carousel";
 import "owl.carousel/dist/assets/owl.carousel.css";
 import "owl.carousel/dist/assets/owl.theme.default.css";
-import config from "../../../helper/config";
+import { useEffect, useRef, useState } from "react";
+import { isMobile } from "react-device-detect";
+import OwlCarousel from "react-owl-carousel";
+import { Link } from "react-router-dom";
+import DeletePopper from "../../../components/DeletePopper";
 import EventCountDown from "../../../components/event_countdown";
 import { useUserContext } from "../../../context/UserContext";
-import DeletePopper from "../../../components/DeletePopper";
+import config from "../../../helper/config";
+import {
+  deleteEventCardById,
+  getLatestEventCards,
+  updateEventLike,
+} from "../../../helper/event";
+import { getEventPrice } from "../../../utils";
 
 const Lastevents = () => {
   const { userInfo } = useUserContext();
@@ -20,6 +22,7 @@ const Lastevents = () => {
   const latestEventCarousel = useRef<typeof OwlCarousel>(null);
 
   useEffect(() => {
+    console.log("Is Mobile??? ", isMobile);
     getLatestEventCards().then((res) => {
       if (res.success) {
         console.log(res.eventcards);
@@ -31,96 +34,58 @@ const Lastevents = () => {
   const handleDeleteEventCard = (eventCardId: string) => {
     deleteEventCardById(eventCardId)
       .then((res) => {
-        const updatedEvents = [...latestEvents].filter(
-          (article: any) => article.id !== eventCardId
-        );
-        setLatestEvents(updatedEvents);
+        if (res) {
+          const updatedEvents = [...latestEvents].filter(
+            (article: any) => article.id !== eventCardId
+          );
+          setLatestEvents(updatedEvents);
+        }
       })
       .catch((error) => {
         console.log(error);
       });
   };
 
-  const titleHeader = () => {
-    return (
-      <div className="col-12">
-        <div className="main__title hot__collection">
-          <h2>
-            <Link to="/explorer">Latest Events</Link>
-          </h2>
-        </div>
-      </div>
-    );
+  const onClickLike = (index: number) => {
+    // if (!userInfo) 
+    return;
+    let likes: any[] = [];
+    try {
+      likes = JSON.parse((latestEvents[index] as any).likes_number);
+    } catch (err) {
+      likes = [];
+      console.log(err);
+    }
+    if (typeof likes !== "object") likes = [];
+    console.log(likes);
+    const userId = userInfo.user.id;
+    if (likes.includes(userId)) {
+      const index = likes.indexOf(userId);
+      likes.splice(index, 1);
+    } else {
+      likes.push(userId);
+    }
+    updateEventLike({
+      id: (latestEvents[index] as any).id,
+      likes_number: JSON.stringify(likes),
+    }).then((res) => {
+      if (res.success) {
+        const _eventCards = [...latestEvents];
+        (_eventCards[index] as any).likes_number = JSON.stringify(likes);
+        setLatestEvents(_eventCards);
+      }
+    });
   };
 
-  const lastestEventsEle = () => {
-    return latestEvents.map((eventcard: any, i) => {
-      const addons =
-        eventcard.addons === "" ? [] : JSON.parse(eventcard.addons);
-      let addonPrice = 0;
-      addons.forEach((addon: any) => {
-        addonPrice += Number(addon.price);
-      });
-      return (
-        <div key={i} className="card">
-          {userInfo && userInfo.user.user_type == "ADMIN" ? (
-            <DeletePopper
-              setDeletePopupStatus={setDeletePopupStatus}
-              onClickDelete={() => {
-                handleDeleteEventCard(eventcard.id);
-              }}
-            />
-          ) : (
-            ""
-          )}
-          <Link to={`/event/eventcard/${eventcard.id}`} className="card__cover">
-            <img
-              src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventcard.picture_small}`}
-              alt=""
-            />
-            <span className="card__time">
-              <EventCountDown date={new Date(eventcard.date).toISOString()} />
-            </span>
-          </Link>
-          <h3 className="card__title">
-            <Link to={`/event/eventcard/${eventcard.id}`}>
-              {eventcard.name}
-            </Link>
-          </h3>
-          <div className="card__author ">
-            <div className="text__location">
-              <span>
-                Date{" "}
-                {
-                  new Date(eventcard.date)
-                    .toISOString()
-                    .toString()
-                    .split("T")[0]
-                }
-              </span>
-              <div>
-                <span>Location {eventcard.location}</span>
-              </div>
-            </div>
-          </div>
-          <div className="card__info">
-            <div className="card__price">
-              <span>Current price</span>
-              <span>
-                {eventcard.price + addonPrice} €{/*€*/}
-              </span>
-            </div>
-
-            <button className="card__likes" type="button">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
-              </svg>
-              <span>{eventcard.likes_number}</span>
-            </button>
-          </div>
-        </div>
-      );
-    });
+  const titleHeader = () => {
+    return (
+      <div
+        className="col-12"
+        style={{ padding: 0, paddingLeft: isMobile ? 15 : 0 }}
+      >
+        <div className="main__sub--title">Latest Events</div>
+      </div>
+    );
   };
 
   const next = (eleRf: any) => {
@@ -134,40 +99,174 @@ const Lastevents = () => {
   };
 
   return (
-    <section className="row row--grid">
+    <section className="row row--grid" style={{ margin: 0, padding: 0 }}>
       {titleHeader()}
       {latestEvents.length > 0 ? (
-        <div className="col-12">
+        <div className="col-12" style={{ padding: 0 }}>
           <div className="carousel-wrapper">
             <div className="nav-wrapper">
               <button
                 className="main__nav main__nav--prev"
+                style={{ right: 65 }}
                 type="button"
                 onClick={() => prev(latestEventCarousel)}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M17,11H9.41l3.3-3.29a1,1,0,1,0-1.42-1.42l-5,5a1,1,0,0,0-.21.33,1,1,0,0,0,0,.76,1,1,0,0,0,.21.33l5,5a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42L9.41,13H17a1,1,0,0,0,0-2Z" />
+                <svg
+                  width="45"
+                  height="45"
+                  viewBox="0 0 45 45"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="22.3677"
+                    cy="22.9785"
+                    r="22"
+                    transform="rotate(-180 22.3677 22.9785)"
+                    fill="#14142F"
+                  />
+                  <circle
+                    cx="22.3677"
+                    cy="22.9785"
+                    r="21.5"
+                    transform="rotate(-180 22.3677 22.9785)"
+                    stroke="white"
+                    stroke-opacity="0.33"
+                  />
+                  <path
+                    d="M25.3677 16.9785L19.3677 22.9785L25.3677 28.9785"
+                    stroke="white"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </button>
               <button
                 className="main__nav main__nav--next"
+                style={{ right: 5 }}
                 type="button"
                 onClick={() => next(latestEventCarousel)}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M17.92,11.62a1,1,0,0,0-.21-.33l-5-5a1,1,0,0,0-1.42,1.42L14.59,11H7a1,1,0,0,0,0,2h7.59l-3.3,3.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l5-5a1,1,0,0,0,.21-.33A1,1,0,0,0,17.92,11.62Z" />
+                <svg
+                  width="45"
+                  height="45"
+                  viewBox="0 0 45 45"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle cx="22.3677" cy="22.9785" r="22" fill="#14142F" />
+                  <circle
+                    cx="22.3677"
+                    cy="22.9785"
+                    r="21.5"
+                    stroke="white"
+                    stroke-opacity="0.33"
+                  />
+                  <path
+                    d="M19.3677 28.9785L25.3677 22.9785L19.3677 16.9785"
+                    stroke="white"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </button>
             </div>
             <OwlCarousel
               className="owl-theme"
-              margin={30}
+              margin={isMobile ? 15 : 30}
               items={isMobile ? 1 : 4}
               autoplay={!deletePopupStatus}
-              dots={false}
+              dots={isMobile ? false : true}
+              loop={latestEvents.length < 4 ? (isMobile ? true : false) : true}
               ref={latestEventCarousel as any}
             >
-              {lastestEventsEle()}
+              {latestEvents.map((eventcard: any, i) => {
+                // const addons =
+                //   eventcard.addons === "" ? [] : JSON.parse(eventcard.addons);
+                return (
+                  <div key={i} className="card">
+                    {userInfo && userInfo.user.user_type === "ADMIN" ? (
+                      <DeletePopper
+                        setDeletePopupStatus={setDeletePopupStatus}
+                        onClickDelete={() => {
+                          handleDeleteEventCard(eventcard.id);
+                        }}
+                      />
+                    ) : (
+                      ""
+                    )}
+                    <Link
+                      to={`/event/eventcard/${eventcard.id}`}
+                      className="card__cover"
+                    >
+                      <img
+                        src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventcard.picture_small}`}
+                        alt=""
+                      />
+                    </Link>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        width: "100%",
+                        paddingLeft: 20,
+                        paddingRight: 20,
+                      }}
+                    >
+                      <div className="card__title">
+                        <Link to={`/event/eventcard/${eventcard.id}`}>
+                          {eventcard.name}
+                        </Link>
+                        <EventCountDown
+                          date={new Date(eventcard.date).toISOString()}
+                        />
+                      </div>
+                      <div className="text__location">
+                        <div className="text__location-item">
+                          <p className="text__location-key">Date</p>
+                          <p className="text__location-val">
+                            {
+                              new Date(eventcard.date)
+                                .toISOString()
+                                .toString()
+                                .split("T")[0]
+                            }
+                          </p>
+                        </div>
+                        <div className="text__location-item">
+                          <p className="text__location-key">Location</p>
+                          <p className="text__location-val">
+                            {eventcard.location}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="card__info">
+                        <div className="card__price">
+                          <p className="text__location-key">Current price</p>
+                          <p className="text__location-price">
+                            {getEventPrice(eventcard)} €
+                          </p>
+                        </div>
+
+                        <button
+                          className="card__likes"
+                          type="button"
+                          onClick={() => onClickLike(i)}
+                        >
+                          {userInfo && eventcard.likes_number &&
+                          eventcard.likes_number.includes(userInfo.user.id) ? (
+                            <img src="/img/icons/liked_blue.svg" alt="" />
+                          ) : (
+                            <img src="/img/icons/liked_white.svg" alt="" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </OwlCarousel>
           </div>
         </div>

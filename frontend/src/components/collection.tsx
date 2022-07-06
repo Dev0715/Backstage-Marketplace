@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAllCollections } from "../helper/event";
 import config from "../helper/config";
+import { getAllCollections } from "../helper/event";
 
 const CollectionComp = (props: any) => {
   const [collections, setCollections] = useState([]);
@@ -26,7 +26,7 @@ const CollectionComp = (props: any) => {
         collection ? (
           <div
             className="owl-item cloned"
-            style={{ width: 236, marginRight: 30 }}
+            style={{ width: 288, marginRight: 30 }}
             key={collection?.id}
           >
             <div className="collection">
@@ -36,13 +36,14 @@ const CollectionComp = (props: any) => {
                 style={{
                   background: `url(${config.API_BASE_URL}/api/upload/get_file?path=${collection?.picture_large})`,
                   backgroundSize: "cover",
-                  width: "236px",
+                  backgroundColor: "rgba(255, 255, 255, 0.07)",
                 }}
               />
               <div className="collection__meta">
                 <Link
                   to="/author"
-                  className="collection__avatar collection__avatar--verified"
+                  className="collection__avatar"
+                  style={{ backgroundColor: "pink" }}
                 >
                   <img
                     // src={`${config.API_BASE_URL}/api/upload/get_file?path=${collection?.creator?.avatar}`}

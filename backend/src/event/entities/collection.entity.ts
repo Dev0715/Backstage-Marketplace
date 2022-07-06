@@ -24,6 +24,9 @@ export class Collection extends SoftDelete {
   wallet_address: string;
 
   @Column({ nullable: true })
+  description: string;
+
+  @Column({ nullable: true })
   picture_large: string;
 
   @Column({ nullable: true })
@@ -45,6 +48,7 @@ export class Collection extends SoftDelete {
       category: this.category,
       creator: this.creator.toUserDto(),
       wallet_address: this.wallet_address,
+      description: this.description,
       picture_large: this.picture_large,
       picture_small: this.picture_small,
       picture_ipfs: this.picture_ipfs,

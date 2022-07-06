@@ -16,17 +16,23 @@ export class EventCard extends SoftDelete {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ nullable: true })
   location: string;
 
-  @Column()
+  @Column({ nullable: true })
   date: string;
 
   @Column('varchar', { length: 1023 })
   addons: string;
 
-  @Column({ nullable: true })
-  likes_number: number;
+  @Column('varchar', { length: 1023 })
+  payees: string;
+
+  @Column('varchar', { length: 1023 })
+  royalties: string;
+
+  @Column('text', { nullable: true })
+  likes_number: string;
 
   @Column({ nullable: true })
   background: string;
@@ -43,7 +49,7 @@ export class EventCard extends SoftDelete {
   @Column()
   price: number;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   venue_description: string;
 
   @Column('text')
@@ -70,8 +76,8 @@ export class EventCard extends SoftDelete {
   @ManyToOne(() => User, (user) => user.event_cards)
   creator: User;
 
-  @Column({ nullable: true })
-  tags: string;
+  // @Column({ nullable: true })
+  // tags: string;
 
   @Column()
   category: string;
@@ -94,6 +100,24 @@ export class EventCard extends SoftDelete {
   @Column({ default: 0 })
   deleted: number;
 
+  @Column({ nullable: true })
+  owner_wallet: string;
+
+  @Column({ nullable: true })
+  owner_account: string;
+
+  // @Column({nullable: true})
+  // fee_percentage: string;
+
+  // @Column('varchar', { length: 1023 })
+  // payee_wallet: string;
+
+  // @Column('varchar', { length: 1023 })
+  // payee_account: string;
+
+  // @Column('varchar', { length: 1023 })
+  // payee_fee: string;
+
   toEventCardDto(): EventCardDto {
     return {
       id: this.id,
@@ -115,7 +139,7 @@ export class EventCard extends SoftDelete {
       telegram: this.telegram,
       discord: this.discord,
       creator: this.creator.toUserDto(),
-      tags: this.tags,
+      // tags: this.tags,
       category: this.category,
       collection: this.collection,
       green_pass_needed: this.green_pass_needed,
@@ -124,6 +148,14 @@ export class EventCard extends SoftDelete {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       deleted: this.deleted,
+      owner_wallet: this.owner_wallet,
+      owner_account: this.owner_account,
+      payees: this.payees,
+      royalties: this.royalties,
+      // fee_percentage: this.fee_percentage,
+      // payee_wallet: this.payee_wallet,
+      // payee_account: this.payee_account,
+      // payee_fee: this.payee_fee,
     };
   }
 }

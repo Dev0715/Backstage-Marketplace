@@ -20,11 +20,18 @@ import PageResetPassword from "../views/pages/reset_password";
 import PageAdminActivity from "../views/pages/admin/activity";
 import PageAdminUsers from "../views/pages/admin/users";
 import PageUserCreate from "../views/pages/admin/users/create_user";
+import PageAdminSettings from "../views/pages/admin/settings";
+import About from "../views/pages/about";
+import TermsAndConditions from "../views/pages/terms";
 
 const routes = [
     {
         path: '/',
         element: <Home />
+    },
+    {
+        path: '/about',
+        element: <About />
     },
     {
         path: '/error',
@@ -40,11 +47,15 @@ const routes = [
     },
     {
         path: '/admin/activity',
-        element: <PageAdminActivity />
+        element: <PageActivity />
     },
     {
         path: '/admin/users',
         element: <PageAdminUsers />
+    },
+    {
+        path: '/admin/settings',
+        element: <PageAdminSettings />
     },
     {
         path: '/admin/users/create',
@@ -73,6 +84,10 @@ const routes = [
     {
         path: '/privacy',
         element: <PagePrivacy />
+    },
+    {
+        path: '/terms',
+        element: <TermsAndConditions />
     },
     {
         path: '/blog',

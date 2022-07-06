@@ -15,6 +15,9 @@ export class CollectionDto {
   readonly wallet_address: string;
 
   @ApiProperty()
+  readonly description: string;
+
+  @ApiProperty()
   readonly picture_large: string;
 
   @ApiProperty()

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
-import { Link } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import ItemSelectModal from "../../../components/custom_modals/item_select_modal";
 import { useAppContext } from "../../../context/AppContext";
@@ -9,7 +8,7 @@ import { updateProfile } from "../../../helper/auth";
 import { getAllUserBackgrounds } from "../../../helper/user";
 import { validateEmail } from "../../../utils";
 
-const ProfileDetail = ({ wallet }: any) => {
+const ProfileDetail = ({ wallet, walletNear }: any) => {
   const [cookies, setCookie] = useCookies();
   const { addToast } = useToasts();
   const { userInfo } = useUserContext();
@@ -93,7 +92,7 @@ const ProfileDetail = ({ wallet }: any) => {
     setValues({ ...values, [prop]: value });
   };
   console.log("ADMIN DATA", values);
-  if (values.phone == null || values.phone == "null") values.phone = "";
+  if (values.phone == null || values.phone === "null") values.phone = "";
   const handleUpdateProfile = () => {
     if (!checkvalidations()) return;
 
@@ -108,6 +107,7 @@ const ProfileDetail = ({ wallet }: any) => {
     fd.append("twitter", values.twitter);
     fd.append("instagram", values.instagram);
     fd.append("wallet_address", wallet);
+    fd.append("wallet_address_near", walletNear);
     fd.append(
       "background",
       isImageChanged ? imagePreview : userInfo.user.background
@@ -187,7 +187,7 @@ const ProfileDetail = ({ wallet }: any) => {
                   value={values.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                 />
-                {validations.name == "has-empty" ? (
+                {validations.name === "has-empty" ? (
                   <span className="text-error">Name Required*</span>
                 ) : (
                   ""
@@ -210,12 +210,12 @@ const ProfileDetail = ({ wallet }: any) => {
                   onChange={(e) => handleChange("email", e.target.value)}
                 />
 
-                {validations.email == "has-empty" ? (
+                {validations.email === "has-empty" ? (
                   <span className="text-error">Email Required*</span>
                 ) : (
                   ""
                 )}
-                {validations.email == "has-danger" ? (
+                {validations.email === "has-danger" ? (
                   <span className="text-error">Input Correct Format*</span>
                 ) : (
                   ""

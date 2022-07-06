@@ -1,0 +1,28 @@
+<svg width="77" height="77" viewBox="0 0 77 77" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="38.2466" cy="38.728" r="38" fill="url(#paint0_linear_969_5197)"/>
+<g clip-path="url(#clip0_969_5197)">
+<path d="M39.9131 25.3947L51.5798 25.3947C52.4638 25.3947 53.3117 25.7458 53.9368 26.371C54.5619 26.9961 54.9131 27.8439 54.9131 28.728L54.9131 52.0613C54.9131 52.9454 54.5619 53.7932 53.9368 54.4183C53.3117 55.0435 52.4638 55.3947 51.5798 55.3947L28.2464 55.3947C27.3624 55.3947 26.5145 55.0435 25.8894 54.4183C25.2643 53.7932 24.9131 52.9454 24.9131 52.0613L24.9131 40.3947" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="28.8574" y1="36.6726" x2="28.8574" y2="32.5851" stroke="white" stroke-linecap="round"/>
+<line x1="28.8574" y1="26.2039" x2="28.8574" y2="22.1164" stroke="white" stroke-linecap="round"/>
+<line x1="21.6348" y1="29.5168" x2="25.7223" y2="29.5168" stroke="white" stroke-linecap="round"/>
+<line x1="32.1035" y1="29.5168" x2="36.1911" y2="29.5168" stroke="white" stroke-linecap="round"/>
+<line x1="23.7271" y1="34.5016" x2="26.6173" y2="31.6113" stroke="white" stroke-linecap="round"/>
+<line x1="31.1299" y1="27.0992" x2="34.0202" y2="24.2089" stroke="white" stroke-linecap="round"/>
+<line x1="23.6803" y1="24.3347" x2="26.5706" y2="27.225" stroke="white" stroke-linecap="round"/>
+<line x1="31.0826" y1="31.7374" x2="33.9729" y2="34.6278" stroke="white" stroke-linecap="round"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_969_5197" x1="11.3831" y1="65.5961" x2="65.1216" y2="11.8242" gradientUnits="userSpaceOnUse">
+<stop stop-color="#6262FE" stop-opacity="0"/>
+<stop offset="0.1198" stop-color="#6161F7" stop-opacity="0.1198"/>
+<stop offset="0.2882" stop-color="#5E5DE5" stop-opacity="0.2882"/>
+<stop offset="0.4854" stop-color="#5857C7" stop-opacity="0.4854"/>
+<stop offset="0.7045" stop-color="#514F9D" stop-opacity="0.7045"/>
+<stop offset="0.9389" stop-color="#484568" stop-opacity="0.9389"/>
+<stop offset="1" stop-color="#454259"/>
+</linearGradient>
+<clipPath id="clip0_969_5197">
+<rect width="40" height="40" fill="white" transform="matrix(-1 -8.74228e-08 -8.74228e-08 1 58.2466 18.728)"/>
+</clipPath>
+</defs>
+</svg>

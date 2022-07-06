@@ -1,14 +1,7 @@
-import { useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
-import { useUserContext } from "../../context/UserContext";
-import { buyTicket, getAllAddonIcons } from "../../helper/event";
-import { useToasts } from "react-toast-notifications";
 
 const ItemSelectModal = ({ title, handleEnd, icons }) => {
-  const { setLoading, setModal } = useAppContext();
-  const { userInfo } = useUserContext();
-  const { addToast } = useToasts();
-  const [validation, setValidation] = useState("");
+  const { setModal } = useAppContext();
 
   const onItemSelect = (src) => {
     setModal({ open: false });

@@ -18,7 +18,13 @@ export class EventCardDto {
     readonly addons: string;
 
     @ApiProperty()
-    readonly likes_number: number;
+    readonly payees: string;
+
+    @ApiProperty()
+    readonly royalties: string;
+
+    @ApiProperty()
+    readonly likes_number: string;
 
     @ApiProperty()
     readonly background: string;
@@ -59,8 +65,8 @@ export class EventCardDto {
     @ApiProperty()
     readonly creator: UserDto;
 
-    @ApiProperty()
-    readonly tags: string;
+    // @ApiProperty()
+    // readonly tags: string;
 
     @ApiProperty()
     readonly category: string;
@@ -85,4 +91,22 @@ export class EventCardDto {
 
     @ApiProperty()
     readonly deleted: any;
+
+    @ApiProperty()
+    readonly owner_wallet: string;
+
+    @ApiProperty()
+    readonly owner_account: string;
+
+    // @ApiProperty()
+    // readonly fee_percentage: string;
+
+    // @ApiProperty()
+    // readonly payee_wallet: string;
+
+    // @ApiProperty()
+    // readonly payee_account: string;
+
+    // @ApiProperty()
+    // readonly payee_fee: string;
 }

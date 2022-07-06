@@ -75,6 +75,9 @@ export class User extends SoftDelete {
   @Column({ nullable: true })
   wallet_address: string;
 
+  @Column({ nullable: true })
+  wallet_address_near: string;
+
   @OneToMany(() => EventCard, event_card => event_card.creator )
   event_cards: EventCard[]
 
@@ -104,6 +107,7 @@ export class User extends SoftDelete {
       avatar: this.avatar,
       background: this.background,
       wallet_address: this.wallet_address,
+      wallet_address_near: this.wallet_address_near,
     };
   }
 }

@@ -1,67 +1,458 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import ReactTimeAgo from "react-time-ago";
-import EventCountDown from "../../../components/event_countdown";
-import config from "../../../helper/config";
-import { getAvailableEvents, userTickets } from "../../../helper/event";
-import ChangePassword from "./change-password";
-import ProfileDetail from "./profile-detail";
+import { useEffect, useState } from "react";
+import { isMobile } from "react-device-detect";
+import ItemSelectModal from "../../../components/custom_modals/item_select_modal";
+import { useAppContext } from "../../../context/AppContext";
+import { getAllUserBackgrounds } from "../../../helper/user";
+// import { useUserContext } from "../../../context/UserContext";
+// import config from "../../../helper/config";
+// import { getAvailableEvents, userTickets } from "../../../helper/event";
+// import { getEventPrice } from "../../../utils";
+// import ChangePassword from "./change-password";
+// import ProfileDetail from "./profile-detail";
 
-const Profile = ({ wallet }: any) => {
-  const [tickets, setTickets] = useState([]);
-  const [availableEvents, setAvailableEvents] = useState([]);
-  const [tcur, setTcur] = useState(0);
-  const [cur, setCur] = useState(0);
-
-  const leftClick = () => {
-    if (tcur > 0) setTcur(tcur - 1);
-  };
-
-  const rightClick = () => {
-    if ((tcur + 4) * 5 < tickets.length) setTcur(tcur + 1);
-  };
+const Profile = ({ wallet, walletNear }: any) => {
+  // const [tickets, setTickets] = useState([]);
+  // const [availableEvents, setAvailableEvents] = useState([]);
+  // const [tcur, setTcur] = useState(0);
+  // const [cur, setCur] = useState(0);
+  // const { userInfo } = useUserContext();
+  const { setModal } = useAppContext();
+  const [tapState, setTapState] = useState("general");
+  const [imagePreview, setImagePreview] = useState<any>("");
+  const [isImageChanged, setIsImageChanged] = useState(false);
+  const [userBackgrounds, setUserBackgrounds] = useState<any>([]);
 
   useEffect(() => {
-    userTickets().then((res) => {
+    getAllUserBackgrounds().then((res) => {
       if (res.success) {
-        setTickets(res.tickets);
-      }
-    });
-
-    getAvailableEvents().then((res) => {
-      if (res.success) {
-        setAvailableEvents(res.events);
+        setUserBackgrounds(res.userbackgrounds);
       }
     });
   }, []);
 
-  const ticketView = (ticket: any) => {
-    return (
-      <div className="activity" style={{ width: 620, marginLeft: 20 }}>
-        <Link
-          to={`/event/eventcard/${ticket.eventcard.id}`}
-          className="activity__cover"
-        >
-          <img
-            src={`${config.API_BASE_URL}/api/upload/get_file?path=${ticket.eventcard.picture_small}`}
-            alt=""
-          />
-        </Link>
-        <div className="activity__content">
-          <h3 className="activity__title">{ticket.eventcard.name}</h3>
-          <p className="activity__text">
-            Created by{" "}
-            <Link to="/author">@{ticket.eventcard.creator.name}</Link>
-          </p>
-          <span className="activity__time">
-            <ReactTimeAgo date={ticket.eventcard.createdAt} locale="en-US" />
-          </span>
-        </div>
-      </div>
-    );
+  const set_Icon = (icon_src: any) => {
+    // setAddonIcon(icon_src);
+    setImagePreview(icon_src);
+    setIsImageChanged(true);
+    console.log(icon_src);
   };
 
-  const cardView = (eventcard: any) => {
+  const [generalValidations, setGeneralValidations] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+    website: "",
+    bsc: "",
+    img: "",
+    description: "",
+  });
+
+  const [generalValues, setGeneralValues] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+    website: "",
+    bsc: "",
+    img: "",
+    description: "",
+  });
+
+  const [socialValidations, setSocialValidations] = useState({
+    facebook: "",
+    twitter: "",
+    instagram: "",
+    medium: "",
+  });
+
+  const [socialValues, setSocialValues] = useState({
+    facebook: "",
+    twitter: "",
+    instagram: "",
+    medium: "",
+  });
+
+  const [pwdValidations, setPwdValidations] = useState({
+    oldPwd: "",
+    newPwd: "",
+    confirmPwd: "",
+  });
+
+  const [pwdValues, setPwdValues] = useState({
+    oldPwd: "",
+    newPwd: "",
+    confirmPwd: "",
+  });
+
+  const [isGeneralChanged, setIsGeneralChanged] = useState(false);
+  const [isSocialChanged, setIsSocialChanged] = useState(false);
+  const [isPwdChanged, setIsPwdChanged] = useState(false);
+
+  const handleGeneralChange = (prop: any, value: any) => {
+    setIsGeneralChanged(true);
+    setGeneralValidations((prevState) => ({ ...prevState, [prop]: "" }));
+    setGeneralValues({ ...generalValues, [prop]: value });
+  };
+
+  const handleSocialChange = (prop: any, value: any) => {
+    setIsSocialChanged(true);
+    setSocialValidations((prevState) => ({ ...prevState, [prop]: "" }));
+    setSocialValues({ ...socialValues, [prop]: value });
+  };
+
+  const handlePwdChange = (prop: any, value: any) => {
+    setIsPwdChanged(true);
+    setPwdValidations((prevState) => ({ ...prevState, [prop]: "" }));
+    setPwdValues({ ...pwdValues, [prop]: value });
+  };
+  const imageChange = (e: any) => {
+    // e.preventDefault();
+    // const reader = new FileReader();
+    // const f = e.target.files[0];
+    // if (reader !== undefined && f !== undefined) {
+    //     reader.onloadend = () => {
+    //         setFile(f)
+    //         setImagePreview(reader.result)
+    //     }
+    //     reader.readAsDataURL(f);
+    // }
+
+    setModal({
+      open: true,
+      children: (
+        <ItemSelectModal
+          title="Select User Background"
+          handleEnd={set_Icon}
+          icons={userBackgrounds}
+        />
+      ),
+    });
+  };
+
+  const renderGeneralTab = () => (
+    <>
+      {isMobile && (
+        <p
+          style={{
+            color: "#fff",
+            fontSize: 16,
+            fontWeight: 700,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+          }}
+        >
+          General
+        </p>
+      )}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          marginTop: 20,
+        }}
+      >
+        <div className="sign__group" style={{ marginRight: isMobile ? 0 : 55 }}>
+          <p className="sign__form-label">{isMobile ? "Username" : "Name"}</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={generalValues.name}
+            onChange={(e) => handleGeneralChange("name", e.target.value)}
+          />
+        </div>
+        <div className="sign__group">
+          <p className="sign__form-label">Email</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={generalValues.email}
+            onChange={(e) => handleGeneralChange("email", e.target.value)}
+          />
+        </div>
+      </div>
+      <div
+        style={{ display: "flex", flexDirection: isMobile ? "column" : "row" }}
+      >
+        <div className="sign__group" style={{ marginRight: isMobile ? 0 : 55 }}>
+          <p className="sign__form-label">Mobile Number</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={generalValues.mobile}
+            onChange={(e) => handleGeneralChange("mobile", e.target.value)}
+          />
+        </div>
+        <div className="sign__group">
+          <p className="sign__form-label">Website</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={generalValues.website}
+            onChange={(e) => handleGeneralChange("website", e.target.value)}
+          />
+        </div>
+      </div>
+      <div
+        style={{ display: "flex", flexDirection: isMobile ? "column" : "row" }}
+      >
+        {/* <div className="sign__group" style={{ marginRight: isMobile ? 0 : 55 }}>
+          <p className="sign__form-label">BSC Wallet Address</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={generalValues.bsc}
+            onChange={(e) => handleGeneralChange("bsc", e.target.value)}
+          />
+        </div> */}
+        <div className="sign__group">
+          <p className="sign__form-label">Background Image</p>
+          <p className="input__upload" onClick={imageChange}>
+            <img
+              src="/img/icons/upload-1.svg"
+              alt=""
+              style={{ width: 16, height: 16, marginRight: 10 }}
+            />{" "}
+            <span
+              style={{
+                textTransform: "uppercase",
+                fontSize: 16,
+                fontWeight: 700,
+                letterSpacing: "0.15em",
+              }}
+            >
+              upload
+            </span>
+          </p>
+        </div>
+      </div>
+      <div className="sign__group" style={{ marginRight: isMobile ? 0 : 55 }}>
+        <p className="sign__form-label">Description</p>
+        <textarea
+          name="message"
+          className="sign__input"
+          style={{ height: 90, resize: "none", padding: "10px 20px" }}
+        />
+      </div>
+      <button
+        className={isGeneralChanged ? "sign__btn" : "sign__btn-inactive"}
+        type="button"
+        onClick={() =>
+          isGeneralChanged
+            ? console.log("Sibmit")
+            : console.log("You should complete the forms!")
+        }
+      >
+        Save
+      </button>
+    </>
+  );
+
+  const renderSocialTab = () => (
+    <>
+      {isMobile && (
+        <p
+          style={{
+            color: "#fff",
+            fontSize: 16,
+            fontWeight: 700,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            marginTop: 50,
+          }}
+        >
+          Social media
+        </p>
+      )}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          marginTop: 20,
+        }}
+      >
+        <div className="sign__group" style={{ marginRight: isMobile ? 0 : 55 }}>
+          <p className="sign__form-label">Facebook</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={socialValues.facebook}
+            onChange={(e) => handleSocialChange("facebook", e.target.value)}
+          />
+        </div>
+        <div className="sign__group">
+          <p className="sign__form-label">Twitter</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={socialValues.twitter}
+            onChange={(e) => handleSocialChange("twitter", e.target.value)}
+          />
+        </div>
+      </div>
+      <div
+        style={{ display: "flex", flexDirection: isMobile ? "column" : "row" }}
+      >
+        <div className="sign__group" style={{ marginRight: isMobile ? 0 : 55 }}>
+          <p className="sign__form-label">Instagram</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={socialValues.instagram}
+            onChange={(e) => handleSocialChange("instagram", e.target.value)}
+          />
+        </div>
+        <div className="sign__group">
+          <p className="sign__form-label">Medium</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={socialValues.medium}
+            onChange={(e) => handleSocialChange("medium", e.target.value)}
+          />
+        </div>
+      </div>
+
+      <button
+        className={isSocialChanged ? "sign__btn" : "sign__btn-inactive"}
+        type="button"
+        onClick={() =>
+          isSocialChanged
+            ? console.log("Sibmit")
+            : console.log("You should complete the forms!")
+        }
+      >
+        Save
+      </button>
+    </>
+  );
+
+  const renderPwdTab = () => (
+    <>
+      {isMobile && (
+        <p
+          style={{
+            color: "#fff",
+            fontSize: 16,
+            fontWeight: 700,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            marginTop: 50,
+          }}
+        >
+          Change Password
+        </p>
+      )}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          marginTop: 20,
+        }}
+      >
+        <div className="sign__group" style={{ marginRight: isMobile ? 0 : 55 }}>
+          <p className="sign__form-label">Old Password</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={pwdValues.oldPwd}
+            onChange={(e) => handlePwdChange("oldPwd", e.target.value)}
+          />
+        </div>
+        <div className="sign__group">
+          <p className="sign__form-label">New Password</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={pwdValues.newPwd}
+            onChange={(e) => handlePwdChange("newPwd", e.target.value)}
+          />
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          width: isMobile ? "100%" : "50%",
+          paddingRight: isMobile ? 0 : 28,
+        }}
+      >
+        <div className="sign__group">
+          <p className="sign__form-label">Confirm New Password</p>
+          <input
+            type="text"
+            className="sign__input"
+            value={pwdValues.confirmPwd}
+            onChange={(e) => handlePwdChange("confirmPwd", e.target.value)}
+          />
+        </div>
+      </div>
+
+      <button
+        className={isPwdChanged ? "sign__btn" : "sign__btn-inactive"}
+        type="button"
+        onClick={() =>
+          isPwdChanged
+            ? console.log("Sibmit")
+            : console.log("You should complete the forms!")
+        }
+      >
+        Change Password
+      </button>
+    </>
+  );
+
+  return (
+    <div className={isMobile ? " " : "col-12 col-xl-8"}>
+      <div className="profile__settings-header">
+        <p className="profile__settings-title">Profile Settings</p>
+        {!isMobile && (
+          <div className="profile__settings-tags">
+            <p
+              className={
+                tapState === "general"
+                  ? "profile__settings-active"
+                  : "profile__settings-inactive"
+              }
+              onClick={() => setTapState("general")}
+            >
+              General
+            </p>
+            <p
+              className={
+                tapState === "social"
+                  ? "profile__settings-active"
+                  : "profile__settings-inactive"
+              }
+              onClick={() => setTapState("social")}
+            >
+              Social Media
+            </p>
+            <p
+              className={
+                tapState === "pwd"
+                  ? "profile__settings-active"
+                  : "profile__settings-inactive"
+              }
+              onClick={() => setTapState("pwd")}
+            >
+              Change Password
+            </p>
+          </div>
+        )}
+      </div>
+      {tapState === "general" && renderGeneralTab()}
+      {tapState === "social" && renderSocialTab()}
+      {tapState === "pwd" && renderPwdTab()}
+      {isMobile && (
+        <>
+          {renderSocialTab()} {renderPwdTab()}
+        </>
+      )}
+    </div>
+  );
+};
+export default Profile;
+// eslint-disable-next-line no-lone-blocks
+{
+  /* const cardView = (eventcard: any) => {
     return (
       <div className="card" style={{ height: 460, width: 260, marginLeft: 20 }}>
         <Link to={`/event/eventcard/${eventcard.id}`} className="card__cover">
@@ -90,19 +481,19 @@ const Profile = ({ wallet }: any) => {
         <div className="card__info">
           <div className="card__price">
             <span>Current price</span>
-            <span>{eventcard.price} €</span>
+            <span>{getEventPrice(eventcard)} €</span>
           </div>
 
           <button className="card__likes" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
               <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
             </svg>
-            <span>{eventcard.likes_number}</span>
+            <span>{Number(eventcard.likes_number)}</span>
           </button>
         </div>
       </div>
     );
-  };
+  }; 
   return (
     <div className="col-12 col-xl-9">
       <div className="profile" style={{ width: 925, marginLeft: 20 }}>
@@ -124,7 +515,7 @@ const Profile = ({ wallet }: any) => {
             </a>
           </li>
 
-          <li className="nav-item">
+           <li className="nav-item">
             <a
               className="nav-link"
               data-toggle="tab"
@@ -135,22 +526,32 @@ const Profile = ({ wallet }: any) => {
             >
               Created
             </a>
-          </li>
+          </li> 
 
           <li className="nav-item">
-            <a
+             <a
               className="nav-link"
               data-toggle="tab"
               href="#tab-3"
               role="tab"
               aria-controls="tab-3"
               aria-selected="false"
+            > 
+            <Link
+              to={
+                userInfo.user.user_type === "ADMIN"
+                  ? "/admin/activity"
+                  : "/activity"
+              }
+              className="nav-link"
             >
               My Activity
-            </a>
+            </Link>
+
+            {/* </a> 
           </li>
 
-          <li className="nav-item">
+          {/* <li className="nav-item">
             <a
               className="nav-link"
               data-toggle="tab"
@@ -161,14 +562,14 @@ const Profile = ({ wallet }: any) => {
             >
               On Sale
             </a>
-          </li>
+          </li> 
         </ul>
       </div>
 
       <div className="tab-content">
         <div className="tab-pane fade show active" id="tab-1" role="tabpanel">
           <div className="row row--grid">
-            <ProfileDetail wallet={wallet} />
+            <ProfileDetail wallet={wallet} walletNear={walletNear} />
             <ChangePassword />
           </div>
         </div>
@@ -365,7 +766,7 @@ const Profile = ({ wallet }: any) => {
                 </div>
               </div>
             </div>
-          </div> */}
+          </div> 
 
           <div className="row row--grid">
             {tickets.map((ticket, index) => {
@@ -381,7 +782,9 @@ const Profile = ({ wallet }: any) => {
           <div className="row row--grid">
             <div className="col-12">
               <div className="paginator">
-                <span className="paginator__pages">{`${tickets.length > 5 ? 5 : tickets.length} from ${tickets.length}`}</span>
+                <span className="paginator__pages">{`${
+                  tickets.length > 5 ? 5 : tickets.length
+                } from ${tickets.length}`}</span>
                 <ul className="paginator__list">
                   <li>
                     <a onClick={leftClick}>
@@ -458,7 +861,7 @@ const Profile = ({ wallet }: any) => {
                   id="collapseFilter"
                 >
                   <div className="filter filter--sticky" style={{ width: 280 }}>
-                    {/* <h4 className="filter__title">Filters <button type="button">Clear all</button></h4> */}
+                    {/* <h4 className="filter__title">Filters <button type="button">Clear all</button></h4> 
 
                     <div className="filter__group">
                       <ul className="filter__checkboxes">
@@ -529,11 +932,11 @@ const Profile = ({ wallet }: any) => {
                                     aria-controls="collapsemore">Load more
                             </button>
                         </div>
-                    </div> */}
+                    </div> 
         </div>
       </div>
     </div>
   );
 };
-
-export default Profile;
+*/
+}

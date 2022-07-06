@@ -45,4 +45,7 @@ export class UserDto {
 
   @ApiProperty()
   readonly wallet_address: string;
+
+  @ApiProperty()
+  readonly wallet_address_near: string;
 }

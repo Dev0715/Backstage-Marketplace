@@ -10,7 +10,7 @@ import { UploadModule } from './common/upload/upload.module';
 import { ArticleModule } from './article/article.module';
 import { EventModule } from './event/event.module';
 import { MessageModule } from './message/message.module';
-
+import { SettingModule } from './setting/message.module';
 
 @Module({
   imports: [
@@ -21,7 +21,8 @@ import { MessageModule } from './message/message.module';
     UploadModule,
     ArticleModule,
     EventModule,
-    MessageModule    
+    MessageModule,
+    SettingModule
   ],
   controllers: [AppController],
   providers: [AppService],

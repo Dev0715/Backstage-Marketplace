@@ -9,12 +9,12 @@ export class CreateEventCardDto {
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   location: string;
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   date: string;
 
 //   @ApiProperty()
@@ -63,9 +63,9 @@ export class CreateEventCardDto {
   @IsNotEmpty()
   creator: string;
 
-  @ApiProperty()
-  @IsString()
-  tags: string;
+  // @ApiProperty()
+  // @IsString()
+  // tags: string;
 
   @ApiProperty()
   @IsString()
@@ -93,11 +93,34 @@ export class CreateEventCardDto {
   owner_wallet: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  fee_percentage: number;
+  @IsString()
+  owner_account: string;
+
+  // @ApiProperty()
+  // @IsNotEmpty()
+  // fee_percentage: string;
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
   addons: string;
+
+  @ApiProperty()
+  @IsString()
+  payees: string;
+
+  @ApiProperty()
+  @IsString()
+  royalties: string;
+
+  // @ApiProperty()
+  // @IsString()
+  // payee_wallet: string;
+
+  // @ApiProperty()
+  // @IsString()
+  // payee_account: string;
+
+  // @ApiProperty()
+  // @IsString()
+  // payee_fee: string;
 }

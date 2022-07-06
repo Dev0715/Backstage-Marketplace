@@ -29,8 +29,8 @@ export class EventService {
       green_pass_needed: Number(payload.green_pass_needed) ? true : false,
     };
 
-    delete param.owner_wallet;
-    delete param.fee_percentage;
+    // delete param.owner_wallet;
+    // delete param.fee_percentage;
     console.log('event card create object: ', param);
 
     const eventCard: EventCard = getFromDto(param, new EventCard());
@@ -136,6 +136,18 @@ export class EventService {
     ticket.tokenURL = tokenURL;
     ticket.ipfsURL = ipfsURL;
     await this.ticketRepository.save(ticket);
+
+    return this.ticketRepository.findOne({
+      where: { id: id },
+    });
+  }
+
+  async updateEventLike(id: string, likes_number: string): Promise<Ticket> {
+    const event = await this.eventcardRepository.findOne({
+      where: { id: id },
+    });
+    event.likes_number = likes_number;
+    await this.eventcardRepository.save(event);
 
     return this.ticketRepository.findOne({
       where: { id: id },

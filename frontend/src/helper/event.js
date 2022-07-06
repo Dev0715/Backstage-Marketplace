@@ -213,6 +213,20 @@ const updateUserTickets = (data) => {
   });
 };
 
+const updateEventLike = (data) => {
+  return new Promise((resolve, reject) => {
+    api
+      .post("/api/event/eventcard_multi/update_like", data)
+      .then((response) => {
+        resolve(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+        reject(error);
+      });
+  });
+};
+
 const getAvailableEvents = () => {
   return new Promise((resolve, reject) => {
     api
@@ -255,6 +269,7 @@ export {
   getBuyState,
   userTickets,
   updateUserTickets,
+  updateEventLike,
   allTickets,
   getAvailableEvents,
   deleteEventCardById,

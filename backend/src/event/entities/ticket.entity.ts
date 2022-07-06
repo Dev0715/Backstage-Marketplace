@@ -19,6 +19,9 @@ export class Ticket extends SoftDelete {
   @Column({ nullable: true })
   wallet_address: string;
 
+  @Column({ nullable: true })
+  blockchain: string;
+
   @ManyToOne(() => User, (user) => user.tickets)
   buyer: User;
 

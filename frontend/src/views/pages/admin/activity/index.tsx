@@ -12,6 +12,7 @@ import { ethers } from "ethers";
 import { injected } from "../../../../helper/web3service";
 import * as nearAPI from "near-api-js";
 import BN from "bn.js";
+import ReCAPTCHA from "react-google-recaptcha";
 
 import {
   myNFTAddress_testnet,
@@ -28,6 +29,7 @@ import { ConstructorFragment } from "ethers/lib/utils";
 
 /* import the ipfs-http-client library */
 import { create } from "ipfs-http-client";
+import { getEventPrice } from "../../../../utils";
 
 /* Create an instance of the client */
 // const client = create('https://ipfs.infura.io:5001/api/v0');
@@ -59,6 +61,14 @@ const PageAdminActivity = () => {
   const [tickets, setTickets] = useState([]);
 
   const { setLoading } = useAppContext();
+
+  const recaptchaRef = React.createRef();
+  const [captcha, setCaptcha] = useState(true);
+
+  const onChangeCaptcha = (e: any) => {
+    console.log(e);
+    setCaptcha(e);
+  };
 
   async function wallet_connect() {
     try {
@@ -121,7 +131,7 @@ const PageAdminActivity = () => {
               Description: data.eventcard.description,
               Date: data.eventcard.date,
               Location: data.eventcard.location,
-              Price: data.eventcard.price,
+              Price: getEventPrice(data.eventcard),
               Collection: data.eventcard.collection,
             },
           };
@@ -290,7 +300,7 @@ const PageAdminActivity = () => {
             Description: data.eventcard.description,
             Date: data.eventcard.date,
             Location: data.eventcard.location,
-            Price: data.eventcard.price,
+            Price: getEventPrice(data.eventcard),
             Collection: data.eventcard.collection,
           },
         };
@@ -346,7 +356,7 @@ const PageAdminActivity = () => {
   };
 
   useEffect(() => {
-    wallet_connect();
+    // wallet_connect();
     allTickets().then((res) => {
       if (res.success) {
         setTickets(res.tickets);
@@ -376,7 +386,9 @@ const PageAdminActivity = () => {
           />
         </Link>
         <div className="activity__content">
-          <div className="top-right-amount">{ticket.count ? `( ${ticket.count} )` : ""}</div>
+          <div className="top-right-amount">
+            {ticket.count ? `( ${ticket.count} )` : ""}
+          </div>
           <div className="nft-mint">
             <div className="activity__title">
               <Link to="/item">{ticket.eventcard.name}</Link>
@@ -392,17 +404,21 @@ const PageAdminActivity = () => {
                   <div className="activity-mint-btns">
                     <button
                       onClick={() => {
-                        mintNFT(ticket);
+                        if (captcha) mintNFT(ticket);
                       }}
-                      className="btn mint-btn"
+                      className={`btn mint-btn ${
+                        !captcha ? "asset__btn--disable" : ""
+                      }`}
                     >
                       BSC
                     </button>
                     <button
                       onClick={() => {
-                        mintNFTonNear(ticket);
+                        if (captcha) mintNFTonNear(ticket);
                       }}
-                      className="btn mint-btn"
+                      className={`btn mint-btn ${
+                        !captcha ? "asset__btn--disable" : ""
+                      }`}
                     >
                       NEAR
                     </button>
@@ -473,9 +489,29 @@ const PageAdminActivity = () => {
         </div>
       </div>
 
+      {!captcha && (
+        <div
+          style={{
+            color: "white",
+            marginTop: "10px",
+          }}
+        >
+          Before you proceed, please complete the captcha below
+        </div>
+      )}
+      {!captcha && (
+        <ReCAPTCHA
+          style={{ marginTop: "20px" }}
+          ref={recaptchaRef as any}
+          // size="invisible"
+          sitekey="6LeaLwUgAAAAAIBN0ef2xzTx0rIfuLb1POyzr_ei"
+          // sitekey="6Lf4RAUgAAAAAJbw7qXWVBfVtM2Ocggfs0KYGPjv"
+          onChange={onChangeCaptcha}
+        />
+      )}
       <div className="row">
         <div className="col-12 col-xl-3 order-xl-2">
-          <div className="filter-wrap">
+          <div className="filter-wrap" style={{ display: "none" }}>
             <button
               className="filter-wrap__btn"
               type="button"

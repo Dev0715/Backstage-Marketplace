@@ -114,6 +114,7 @@ export class AuthController {
     user.twitter = body.twitter;
     user.background = path;
     user.wallet_address = body.wallet_address;
+    user.wallet_address_near = body.wallet_address_near;
     const updatedUser = await this.userService.updateUser(user);
     const token = this.authService.login(updatedUser);
     const result = new TokenResponseDto(token, updatedUser.toUserDto());

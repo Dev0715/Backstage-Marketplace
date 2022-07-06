@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import { Tooltip } from "@material-ui/core";
+import "owl.carousel/dist/assets/owl.carousel.css";
+import "owl.carousel/dist/assets/owl.theme.default.css";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useCookies } from "react-cookie";
+import { isMobile } from "react-device-detect";
+import OwlCarousel from "react-owl-carousel";
 import {
   Link,
   useNavigate,
@@ -6,7 +12,9 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
-import EventCountDown from "../../../components/event_countdown";
+import TicketBuyModal from "../../../components/custom_modals/ticket_buy_modal";
+import EventCountDown1 from "../../../components/event_countdown1";
+import { useAppContext } from "../../../context/AppContext";
 import config from "../../../helper/config";
 import {
   buyTicket,
@@ -14,33 +22,29 @@ import {
   getCollectionById,
   getEventCardById,
   getLatestEventCards,
+  updateEventLike,
 } from "../../../helper/event";
-import OwlCarousel from "react-owl-carousel";
-import "owl.carousel/dist/assets/owl.carousel.css";
-import "owl.carousel/dist/assets/owl.theme.default.css";
-import { useAppContext } from "../../../context/AppContext";
-import TicketBuyModal from "../../../components/custom_modals/ticket_buy_modal";
-import { useCookies } from "react-cookie";
-import { Tooltip } from "@material-ui/core";
-import { ThemeProvider, createTheme } from "@material-ui/core";
 
-import * as nearAPI from "near-api-js";
+// import * as nearAPI from "near-api-js";
+import ReCAPTCHA from "react-google-recaptcha";
 import { useUserContext } from "../../../context/UserContext";
+import { createMessage } from "../../../helper/message";
+import { getEventPrice, isVideoFile } from "../../../utils";
 
-const theme = createTheme({
-  palette: {
-    background: {
-      paper: "#fff",
-    },
-    text: {
-      primary: "#173A5E",
-      secondary: "#46505A",
-    },
-    action: {
-      active: "#001E3C",
-    },
-  },
-});
+// const theme = createTheme({
+//   palette: {
+//     background: {
+//       paper: "#fff",
+//     },
+//     text: {
+//       primary: "#173A5E",
+//       secondary: "#46505A",
+//     },
+//     action: {
+//       active: "#001E3C",
+//     },
+//   },
+// });
 
 const PageEventCard = () => {
   const { id } = useParams();
@@ -48,7 +52,6 @@ const PageEventCard = () => {
   const { userInfo } = useUserContext();
   const [eventCard, setEventCard] = useState<any>(false);
   const [addons, setAddons] = useState<any>([]);
-  const [addonPrice, setAddonPrice] = useState(0);
   const [collectionName, setCollectionName] = useState();
   const { addToast } = useToasts();
   const [latestEvents, setLatestEvents] = useState([]);
@@ -57,25 +60,37 @@ const PageEventCard = () => {
   const navigate = useNavigate();
   const [cookies, setCookie] = useCookies();
   const [isSold, setSold] = useState(false);
-  const [ticketAmount, setTicketAmount] = useState("1");
+  const [ticketAmount, setTicketAmount] = useState(1);
 
-  const { connect, keyStores, WalletConnection } = nearAPI;
-  const [searchParams, setSearchParams] = useSearchParams();
+  // const { connect, keyStores, WalletConnection } = nearAPI;
+  // const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+
+  const recaptchaRef = React.createRef();
+  const [captcha, setCaptcha] = useState(true);
+  const [inputError, setInputError] = useState(false);
+
+  const vRef = useRef();
+
+  const onChangeCaptcha = (e: any) => {
+    console.log(e);
+    setCaptcha(e);
+  };
 
   useEffect(() => {
     const func1 = async () => {
-      const keyStore = new keyStores.BrowserLocalStorageKeyStore();
-      const config = {
-        networkId: "testnet",
-        keyStore,
-        nodeUrl: "https://rpc.testnet.near.org",
-        walletUrl: "https://wallet.testnet.near.org",
-        helperUrl: "https://helper.testnet.near.org",
-        explorerUrl: "https://explorer.testnet.near.org",
-        headers: {},
-      };
-      const near = await connect(config);
-      const wallet = new WalletConnection(near, null);
+      // const keyStore = new keyStores.BrowserLocalStorageKeyStore();
+      // const config = {
+      //   networkId: "testnet",
+      //   keyStore,
+      //   nodeUrl: "https://rpc.testnet.near.org",
+      //   walletUrl: "https://wallet.testnet.near.org",
+      //   helperUrl: "https://helper.testnet.near.org",
+      //   explorerUrl: "https://explorer.testnet.near.org",
+      //   headers: {},
+      // };
+      // const near = await connect(config);
+      // const wallet = new WalletConnection(near, null);
 
       addToast(
         "NEAR Wallet has been connected, Please buy your ticket on NEAR!",
@@ -131,12 +146,6 @@ const PageEventCard = () => {
           res.eventcard.addons === "" ? [] : JSON.parse(res.eventcard.addons);
         setAddons(_addons);
 
-        let _addonPrice = 0;
-        _addons.forEach((addon: any) => {
-          _addonPrice += Number(addon.price);
-        });
-        setAddonPrice(_addonPrice);
-
         getCollectionById(res.eventcard.collection).then((res) => {
           if (res.success) {
             console.log(res);
@@ -155,19 +164,93 @@ const PageEventCard = () => {
 
     console.log(id);
 
-    getBuyState(id)
-      .then((res) => {
-        if (res.success) {
-          console.log("Already bought");
-          // setSold(true);
-        } else {
-          console.log("You can buy");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    // getBuyState(id)
+    //   .then((res) => {
+    //     if (res.success) {
+    //       console.log("Already bought");
+    //       // setSold(true);
+    //     } else {
+    //       console.log("You can buy");
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //   });
   }, [id]);
+
+  const likeNumber: Number = useMemo(() => {
+    let likes: any[] = [];
+    try {
+      likes = JSON.parse((eventCard as any).likes_number);
+    } catch (err) {
+      likes = [];
+      console.log(err);
+    }
+    if (typeof likes !== "object") likes = [];
+    if (likes) return likes.length;
+    else return 0;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventCard]);
+
+  const onClickLike = (index: number) => {
+    // if (!userInfo)
+    return;
+    let likes: any[] = [];
+    try {
+      likes = JSON.parse((latestEvents[index] as any).likes_number);
+    } catch (err) {
+      likes = [];
+      console.log(err);
+    }
+    if (typeof likes !== "object") likes = [];
+    console.log(likes);
+    const userId = userInfo.user.id;
+    if (likes.includes(userId)) {
+      const index = likes.indexOf(userId);
+      likes.splice(index, 1);
+    } else {
+      likes.push(userId);
+    }
+    updateEventLike({
+      id: (latestEvents[index] as any).id,
+      likes_number: JSON.stringify(likes),
+    }).then((res) => {
+      if (res.success) {
+        const _eventCards = [...latestEvents];
+        (_eventCards[index] as any).likes_number = JSON.stringify(likes);
+        setLatestEvents(_eventCards);
+      }
+    });
+  };
+
+  const _onClickLike = () => {
+    // if (!userInfo)
+    return;
+    let likes: any[] = [];
+    try {
+      likes = JSON.parse((eventCard as any).likes_number);
+    } catch (err) {
+      likes = [];
+      console.log(err);
+    }
+    if (typeof likes !== "object") likes = [];
+    console.log(likes);
+    const userId = userInfo.user.id;
+    if (likes.includes(userId)) {
+      const index = likes.indexOf(userId);
+      likes.splice(index, 1);
+    } else {
+      likes.push(userId);
+    }
+    updateEventLike({
+      id: (eventCard as any).id,
+      likes_number: JSON.stringify(likes),
+    }).then((res) => {
+      if (res.success) {
+        setEventCard({ ...eventCard, likes_number: JSON.stringify(likes) });
+      }
+    });
+  };
 
   const next = (eleRf: any) => {
     const ele: any = eleRf.current;
@@ -181,7 +264,7 @@ const PageEventCard = () => {
 
   const telegramUrl = (username: string) => {
     let temp;
-    if (username.length > 0 && username.substr(0, 1) == "@") {
+    if (username.length > 0 && username.substr(0, 1) === "@") {
       temp = username.substr(1, username.length - 1);
     } else {
       temp = username;
@@ -190,57 +273,22 @@ const PageEventCard = () => {
     return "https://t.me/" + temp;
   };
 
-  const lastestEventsEle = () => {
-    return latestEvents.map((eventcard: any) => (
-      <div className="card">
-        <Link to={`/event/eventcard/${eventcard.id}`} className="card__cover">
-          <img
-            src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventcard.picture_small}`}
-            alt=""
-          />
-          <span className="card__time">
-            <EventCountDown date={eventcard.date} />
-          </span>
-        </Link>
-        <h3 className="card__title">
-          <Link to={`/event/eventcard/${eventcard.id}`}>{eventcard.name}</Link>
-        </h3>
-        <div className="card__author ">
-          <div className="text__location">
-            <span>
-              Date
-              {
-                new Date(eventcard.date)
-                  .toISOString()
-                  .toString()
-                  .split("T")[0]
-              }
-            </span>
-            <div>
-              <span>Location {eventcard.location}</span>
-            </div>
-          </div>
-        </div>
-        <div className="card__info">
-          <div className="card__price">
-            <span>Current price</span>
-            <span>{eventcard.price} €</span>
-          </div>
-
-          <button className="card__likes" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
-            </svg>
-            <span>{eventcard.likes_number}</span>
-          </button>
-        </div>
-      </div>
-    ));
+  const wholeLink = (link: string) => {
+    if (link.split("//").length === 1) {
+      return "https://" + link;
+    } else {
+      return link;
+    }
   };
 
   const handleBuyTicket = () => {
     //hushi signup test
     // console.log("hushi cook", cookies)
+    if (isNaN(Number(ticketAmount)) || Number(ticketAmount) <= 0) {
+      setInputError(true);
+      return;
+    }
+
     if (Boolean(cookies.userInfo)) {
       if (eventCard.total_tickets <= eventCard.buy_count) {
         addToast("Already sold full amount of tickets", {
@@ -285,6 +333,21 @@ const PageEventCard = () => {
     console.log("bought", userInfo);
     // setSold(true);
 
+    createMessage({
+      receiver: userInfo.user.email,
+      link: `${config.API_BASE_URL}/api/upload/get_file?path=${eventCard.picture_small}`,
+      content: `You bought a ticket of ${eventCard.name} on BKS Backstage`,
+    }).then((res) => {
+      if (res.success) {
+        addToast("Sent Email", {
+          appearance: "success",
+          autoDismiss: true,
+        });
+      } else {
+        addToast("failed", { appearance: "error", autoDismiss: true });
+      }
+    });
+
     if (
       Boolean(cookies?.userInfo) &&
       cookies.userInfo.user.user_type === "ADMIN"
@@ -301,14 +364,14 @@ const PageEventCard = () => {
     // );
   };
 
-  const copyLink = () => {
-    const url = `${config.SITE_URL}/event/eventcard/${id}`;
-    navigator.clipboard.writeText(url);
-    addToast("Copied the link to clipboard", {
-      appearance: "success",
-      autoDismiss: true,
-    });
-  };
+  // const copyLink = () => {
+  //   const url = `${config.SITE_URL}/event/eventcard/${id}`;
+  //   navigator.clipboard.writeText(url);
+  //   addToast("Copied the link to clipboard", {
+  //     appearance: "success",
+  //     autoDismiss: true,
+  //   });
+  // };
 
   const toolTipText = (addon: any) => {
     return (
@@ -328,8 +391,17 @@ const PageEventCard = () => {
   };
 
   return (
-    <main className="main">
-      <div className="container">
+    <div
+      className="container"
+      style={{ padding: isMobile ? 20 : 0, paddingBottom: 300, zIndex: 999 }}
+    >
+      {isMobile ? (
+        <div className="article__top">
+          <div onClick={() => navigate("/explorer")}>
+            <img src="/img/icons/arrow-left.svg" alt="" />
+          </div>
+        </div>
+      ) : (
         <div className="row row--grid">
           <div className="col-12">
             <ul className="breadcrumb">
@@ -345,10 +417,11 @@ const PageEventCard = () => {
             </ul>
           </div>
         </div>
+      )}
 
-        {eventCard ? (
-          <div className="row">
-            <div className="col-12">
+      {eventCard ? (
+        <div className="assets__container">
+          {/* <div className="col-12">
               <div
                 className="main__title main__title--page"
                 style={{ justifyContent: "inherit" }}
@@ -371,23 +444,50 @@ const PageEventCard = () => {
                   ""
                 )}
               </div>
-            </div>
+            </div> */}
 
-            <div className="col-12 col-xl-8">
-              <div className="asset__item">
-                <a className="asset__img" style={{ width: "100%" }}>
-                  <img
-                    src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventCard.picture_large}`}
-                    alt=""
-                    style={{ width: "100%" }}
-                  />
-                </a>
-                <div className="share share--asset">
+          <div className="asset__item">
+            <a href="/" className="asset__img">
+              {isVideoFile(eventCard.picture_large) ? (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    overflowX: "hidden",
+                  }}
+                >
+                  <video
+                    autoPlay
+                    playsInline
+                    loop
+                    muted
+                    style={{ width: "auto", height: "100%" }}
+                    ref={vRef as any}
+                  >
+                    <source
+                      src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventCard.picture_large}`}
+                      type="video/mp4"
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              ) : (
+                <img
+                  src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventCard.picture_large}`}
+                  alt=""
+                  style={{ width: "100%" }}
+                />
+              )}
+            </a>
+            {/* <div className="share share--asset">
                   {eventCard.facebook ? (
                     <a
-                      href={eventCard.facebook}
+                      href={wholeLink(eventCard.facebook)}
                       className="share__link share__link--fb"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <svg
                         width="9"
@@ -405,9 +505,10 @@ const PageEventCard = () => {
                   )}
                   {eventCard.twitter ? (
                     <a
-                      href={eventCard.twitter}
+                      href={wholeLink(eventCard.twitter)}
                       className="share__link share__link--tw"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <svg
                         width="16"
@@ -425,9 +526,10 @@ const PageEventCard = () => {
                   )}
                   {eventCard.instagram ? (
                     <a
-                      href={eventCard.instagram}
+                      href={wholeLink(eventCard.instagram)}
                       className="share__link share__link--in"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <svg
                         width="20px"
@@ -445,9 +547,10 @@ const PageEventCard = () => {
                   )}
                   {eventCard.telegram ? (
                     <a
-                      href={telegramUrl(eventCard.telegram)}
+                      href={wholeLink(telegramUrl(eventCard.telegram))}
                       className="share__link share__link--te"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <svg
                         width="16px"
@@ -465,9 +568,10 @@ const PageEventCard = () => {
                   )}
                   {eventCard.discord ? (
                     <a
-                      href={eventCard.discord}
+                      href={wholeLink(eventCard.discord)}
                       className="share__link share__link--discord"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <svg
                         width="18px"
@@ -485,9 +589,10 @@ const PageEventCard = () => {
                   )}
                   {eventCard.tiktok ? (
                     <a
-                      href={eventCard.tiktok}
+                      href={wholeLink(eventCard.tiktok)}
                       className="share__link share__link--tiktok"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <svg
                         width="15px"
@@ -505,254 +610,330 @@ const PageEventCard = () => {
                     ""
                   )}
                 </div>
-                <button className="asset__likes" type="button">
+                <button
+                  className="asset__likes"
+                  type="button"
+                  onClick={onClickLike}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
                   </svg>
-                  <span>358</span>
+                  <span>{Number(eventCard.likes_number)}</span>
+                </button> */}
+          </div>
+          <div className="asset__info">
+            {/* Name */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+            >
+              <p className="asset__name">{eventCard.name}</p>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <button
+                  className="card__likes"
+                  type="button"
+                  onClick={_onClickLike}
+                >
+                  {userInfo &&
+                  eventCard.likes_number &&
+                  eventCard.likes_number.includes(userInfo.user.id) ? (
+                    <img src="/img/icons/liked_blue.svg" alt="" />
+                  ) : (
+                    <img src="/img/icons/liked_white.svg" alt="" />
+                  )}
+                </button>
+                <p
+                  style={{
+                    color: "rgba(255, 255, 255, 0.66)",
+                    fontSize: 14,
+                    fontWeight: 400,
+                    margin: 0,
+                    paddingLeft: 8,
+                  }}
+                >
+                  {likeNumber}
+                </p>
+              </div>
+            </div>
+            <p className="asset__desc">{eventCard.venue_description}</p>
+            {!isMobile && <div style={{ flex: 1 }}></div>}
+            <div className="asset__author">
+              <div className="asset__author--items">
+                <div className="asset__author-item">
+                  <p className="text__small-title">Creator</p>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <Link to="/author" style={{ color: "#fff" }}>
+                      {eventCard.creator.name}
+                    </Link>
+                    <img
+                      src="/img/icons/verified.svg"
+                      alt=""
+                      style={{ height: 16, marginLeft: 8 }}
+                    />
+                  </div>
+                </div>
+                <div className="asset__author-item">
+                  <p className="text__small-title">Location</p>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <p className="text__small-val">{eventCard.location}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="asset__author--items">
+                <div className="asset__author-item">
+                  <p className="text__small-title">Date</p>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <p className="text__small-val">
+                      {
+                        new Date(eventCard.date)
+                          .toISOString()
+                          .toString()
+                          .split("T")[0]
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className="asset__author-item">
+                  <p className="text__small-title">Time</p>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <p className="text__small-val">
+                      {" "}
+                      {
+                        new Date(eventCard.date)
+                          .toISOString()
+                          .toString()
+                          .split("T")[1]
+                          .split(".")[0]
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="asset__collection">
+              <div className="asset__author--items">
+                <div className="asset__author-item">
+                  <p className="text__small-title">Collection</p>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <img
+                      src="/img/avatars/avatar5.jpg"
+                      alt=""
+                      className="asset__collection-img"
+                    />
+                    <Link
+                      to={`/collection/${eventCard.collection}`}
+                      style={{ color: "#fff" }}
+                    >
+                      {/* {collectionName} */}Fed
+                    </Link>
+                  </div>
+                </div>
+                <div className="asset__author-item">
+                  <p className="text__small-title">Addons</p>
+                  {addons.length ? (
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      {addons.map((addon: any) => (
+                        <Tooltip title={toolTipText(addon)} arrow>
+                          <img
+                            src={addon.icon}
+                            alt={addon.name}
+                            className="asset__collection-img"
+                          />
+                        </Tooltip>
+                      ))}
+                    </div>
+                  ) : (
+                    <></>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="asset__timing">
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <img
+                  src="/img/icons/clock.svg"
+                  alt=""
+                  style={{
+                    height: 16,
+                    width: 16,
+                    marginRight: 8,
+                  }}
+                />
+                <p className="text__small-title">Event Starts in</p>
+              </div>
+              <EventCountDown1 date={eventCard.date} />
+            </div>
+            <div style={{ width: "100%" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                }}
+              >
+                <p className="asset__desc">
+                  {eventCard.total_tickets - eventCard.buy_count} ticket
+                  {eventCard.total_tickets - eventCard.buy_count > 1
+                    ? "s"
+                    : ""}{" "}
+                  left
+                </p>
+                <p className="asset__name">{getEventPrice(eventCard)}€</p>
+              </div>
+              {!captcha && (
+                <div
+                  style={{
+                    color: "white",
+                    // marginTop: "10px",
+                  }}
+                >
+                  Before you proceed, please complete the captcha below
+                </div>
+              )}
+              {!captcha && (
+                <ReCAPTCHA
+                  style={{
+                    marginTop: "15px",
+                    marginBottom: "15px",
+                  }}
+                  ref={recaptchaRef as any}
+                  // size="invisible"
+                  sitekey="6LeaLwUgAAAAAIBN0ef2xzTx0rIfuLb1POyzr_ei"
+                  // sitekey="6Lf4RAUgAAAAAJbw7qXWVBfVtM2Ocggfs0KYGPjv"
+                  onChange={onChangeCaptcha}
+                />
+              )}
+              <div style={{ display: "flex" }}>
+                <div className="assets__amount">
+                  <p
+                    onClick={() => {
+                      if (ticketAmount > 1) setTicketAmount(ticketAmount - 1);
+                    }}
+                  >
+                    -
+                  </p>
+                  <p className="assets__amount-number">{ticketAmount}</p>
+                  <p
+                    onClick={() => {
+                      if (ticketAmount < 10) setTicketAmount(ticketAmount + 1);
+                    }}
+                  >
+                    +
+                  </p>
+                </div>
+                <button
+                  className={
+                    !isSold && captcha ? "buy__btn" : "buy__btn-disable"
+                  }
+                  onClick={!isSold && captcha ? handleBuyTicket : () => {}}
+                  // onClick={handleBuyTicket}
+                >
+                  {isSold ? "Sold Out" : "Buy Ticket"}
                 </button>
               </div>
             </div>
 
-            <div className="col-12 col-xl-4">
-              <div className="asset__info">
-                <div className="asset__desc">
-                  <h2>Descriptions</h2>
-                  <p>{eventCard.venue_description}</p>
-                </div>
-
-                <ul className="asset__authors">
-                  <li>
-                    <span>Creator</span>
-                    <div className="asset__author asset__author--verified">
-                      {eventCard.creator.avatar ? (
-                        <img
-                          // src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventCard.creator.avatar}`}
-                          src={`${eventCard.creator.avatar}`}
-                          alt=""
-                        />
-                      ) : (
-                        <img src="/img/avatars/avatar5.jpg" alt="" />
-                      )}
-                      <Link to="/author">{eventCard.creator.name}</Link>
-                    </div>
-                  </li>
-                  <li>
-                    <span>Collection</span>
-                    <div className="asset__author ">
-                      <img src="/img/avatars/avatar5.jpg" alt="" />
-                      <Link to={`/collection/${eventCard.collection}`}>
-                        {collectionName}
-                      </Link>
-                    </div>
-                  </li>
-                </ul>
-
-                <ul
-                  className="nav nav-tabs asset__tabs addon-details"
-                  role="tablist"
-                >
-                  <li className="nav-item">
-                    <a
-                      className="nav-link"
-                      data-toggle="tab"
-                      href="#tab-3"
-                      role="tab"
-                      aria-controls="tab-3"
-                      aria-selected="false"
-                    >
-                      Addons
-                    </a>
-                  </li>
-                </ul>
-
-                {addons.length ? (
-                  // <ThemeProvider theme={theme}>
-                  <div className="card__info addon-details-box">
-                    <div className="addon-box">
-                      {addons.map((addon: any) => (
-                        <Tooltip title={toolTipText(addon)} arrow>
-                          <img src={addon.icon} alt={addon.name} width={20} />
-                        </Tooltip>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  // </ThemeProvider>
-                  <></>
+            {/* <div className="asset__btns">
+                {inputError && (
+                  <span className="text-error">
+                    Ticket amount should be more than 0*
+                  </span>
                 )}
-
-                <ul className="nav nav-tabs asset__tabs" role="tablist">
-                  <li className="nav-item">
-                    <a
-                      className="nav-link"
-                      data-toggle="tab"
-                      href="#tab-3"
-                      role="tab"
-                      aria-controls="tab-3"
-                      aria-selected="false"
-                    >
-                      Details
-                    </a>
-                  </li>
-                </ul>
-
-                <div className="tab-content">
+                {!captcha && (
                   <div
-                    className="tab-pane fade show active"
-                    id="tab-1"
-                    role="tabpanel"
+                    style={{
+                      color: "white",
+                      marginTop: "10px",
+                    }}
                   >
-                    <div
-                      className="asset__actions asset__actions--scroll"
-                      id="asset__actions--scroll"
-                      style={{ height: "inherit" }}
-                    >
-                      <p>Location {eventCard.location}</p>
-                      <p>
-                        Date{" "}
-                        {
-                          new Date(eventCard.date)
-                            .toISOString()
-                            .toString()
-                            .split("T")[0]
-                        }
-                      </p>
-                      <p>
-                        Time{" "}
-                        {
-                          new Date(eventCard.date)
-                            .toISOString()
-                            .toString()
-                            .split("T")[1]
-                        }
-                      </p>
-                      <p>{eventCard.description}</p>
-                      {eventCard.total_tickets - eventCard.buy_count <= 10 ? (
-                        <p>
-                          {eventCard.total_tickets - eventCard.buy_count}{" "}
-                          tickets are left
-                        </p>
-                      ) : (
-                        <></>
-                      )}
-                    </div>
+                    Before you proceed, please complete the captcha below
                   </div>
-
-                  <div className="tab-pane fade" id="tab-2" role="tabpanel">
-                    <div className="asset__actions">
-                      <div className="asset__action asset__action--verified">
-                        <img src="/img/avatars/avatar10.jpg" alt="" />
-                        <p>
-                          Bid placed for <b>11.00 €</b> 4 hours ago <br />
-                          by <Link to="/author">@erikkk</Link>
-                        </p>
-                      </div>
-
-                      <div className="asset__action asset__action--verified">
-                        <img src="/img/avatars/avatar4.jpg" alt="" />
-                        <p>
-                          Bid placed for <b>10.00 €</b> 5 hours ago <br />
-                          by <Link to="/author">@johndoe</Link>
-                        </p>
-                      </div>
-
-                      <div className="asset__action asset__action--verified">
-                        <img src="/img/avatars/avatar6.jpg" alt="" />
-                        <p>
-                          Bid placed for <b>2.508 €</b> 5 hours ago <br />
-                          by <Link to="/author">@n1ckname</Link>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="tab-pane fade" id="tab-3" role="tabpanel">
-                    <ul className="asset__authors asset__authors--tab">
-                      <li>
-                        <span>Owner</span>
-                        <div className="asset__author asset__author--verified">
-                          <img src="/img/avatars/avatar5.jpg" alt="" />
-                          <Link to="/author">@midinh</Link>
-                        </div>
-                      </li>
-                      <li>
-                        <span>Year created</span>
-                        <p>2021</p>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="asset__wrap">
-                  <div className="asset__timer">
-                    <span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M18.3,8.59l.91-.9a1,1,0,0,0-1.42-1.42l-.9.91a8,8,0,0,0-9.79,0l-.91-.92A1,1,0,0,0,4.77,7.69l.92.91A7.92,7.92,0,0,0,4,13.5,8,8,0,1,0,18.3,8.59ZM12,19.5a6,6,0,1,1,6-6A6,6,0,0,1,12,19.5Zm-2-15h4a1,1,0,0,0,0-2H10a1,1,0,0,0,0,2Zm3,6a1,1,0,0,0-2,0v1.89a1.5,1.5,0,1,0,2,0Z" />
-                      </svg>{" "}
-                      Events start in
-                    </span>
-                    <div className="event__clock">
-                      <EventCountDown date={eventCard.date} />
-                    </div>
-                  </div>
-
-                  <div className="asset__price">
-                    <span>Price</span>
-                    <span>
-                      {/*€*/}
-                      {eventCard.price + Number(addonPrice)} €
-                    </span>
-                  </div>
-                </div>
-                <div className="asset__btns">
-                  <input
-                    id="location"
-                    type="text"
-                    name="location"
-                    className="sign__input"
-                    placeholder="Amount"
-                    style={{ marginTop: "20px" }}
-                    value={ticketAmount}
-                    onChange={(e) => setTicketAmount(e.target.value)}
+                )}
+                {!captcha && (
+                  <ReCAPTCHA
+                    style={{
+                      marginTop: "15px",
+                    }}
+                    ref={recaptchaRef as any}
+                    // size="invisible"
+                    sitekey="6LeaLwUgAAAAAIBN0ef2xzTx0rIfuLb1POyzr_ei"
+                    // sitekey="6Lf4RAUgAAAAAJbw7qXWVBfVtM2Ocggfs0KYGPjv"
+                    onChange={onChangeCaptcha}
                   />
-                  <button
-                    className="asset__btn asset__btn--full asset__btn--clr open-modal"
-                    // disabled={eventCard.total_tickets == eventCard.buy_count}
-                    onClick={isSold ? () => {} : handleBuyTicket}
-                  >
-                    {isSold ? "Sold Out" : "Buy Ticket"}
-                  </button>
-                </div>
-              </div>
-            </div>
+                )}
+                <button
+                  className={`asset__btn asset__btn--full open-modal ${
+                    !isSold && captcha
+                      ? "asset__btn--clr"
+                      : "asset__btn--disable"
+                  }`}
+                  // disabled={eventCard.total_tickets == eventCard.buy_count}
+                  onClick={!isSold && captcha ? handleBuyTicket : () => {}}
+                >
+                  {isSold ? "Sold Out" : "Buy Ticket"}
+                </button>
+              </div> */}
           </div>
-        ) : (
-          ""
-        )}
+        </div>
+      ) : (
+        ""
+      )}
 
+      {!isMobile && (
         <section className="row row--grid">
           <div className="col-12">
             <div className="main__title main__title--border-top">
               <h2>
-                <Link to="/explorer">Other author assets</Link>
+                <Link to="/explorer" style={{ fontWeight: 700 }}>
+                  Other author assets
+                </Link>
               </h2>
             </div>
           </div>
 
           {latestEvents.length > 0 ? (
-            <div className="col-12">
-              <div className="carousel-wrapper">
+            <div style={{ width: "100%" }}>
+              <div
+                className="carousel-wrapper"
+                style={{ position: "relative" }}
+              >
                 <div className="nav-wrapper">
                   <button
                     className="main__nav main__nav--prev"
                     type="button"
                     onClick={() => prev(latestEventCarousel)}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                      <path d="M17,11H9.41l3.3-3.29a1,1,0,1,0-1.42-1.42l-5,5a1,1,0,0,0-.21.33,1,1,0,0,0,0,.76,1,1,0,0,0,.21.33l5,5a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42L9.41,13H17a1,1,0,0,0,0-2Z" />
+                    <svg
+                      width="45"
+                      height="45"
+                      viewBox="0 0 45 45"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        cx="22.3677"
+                        cy="22.9785"
+                        r="22"
+                        transform="rotate(-180 22.3677 22.9785)"
+                        fill="#14142F"
+                      />
+                      <circle
+                        cx="22.3677"
+                        cy="22.9785"
+                        r="21.5"
+                        transform="rotate(-180 22.3677 22.9785)"
+                        stroke="white"
+                        stroke-opacity="0.33"
+                      />
+                      <path
+                        d="M25.3677 16.9785L19.3677 22.9785L25.3677 28.9785"
+                        stroke="white"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                   </button>
                   <button
@@ -760,8 +941,27 @@ const PageEventCard = () => {
                     type="button"
                     onClick={() => next(latestEventCarousel)}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                      <path d="M17.92,11.62a1,1,0,0,0-.21-.33l-5-5a1,1,0,0,0-1.42,1.42L14.59,11H7a1,1,0,0,0,0,2h7.59l-3.3,3.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l5-5a1,1,0,0,0,.21-.33A1,1,0,0,0,17.92,11.62Z" />
+                    <svg
+                      width="45"
+                      height="45"
+                      viewBox="0 0 45 45"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle cx="22.3677" cy="22.9785" r="22" fill="#14142F" />
+                      <circle
+                        cx="22.3677"
+                        cy="22.9785"
+                        r="21.5"
+                        stroke="white"
+                        stroke-opacity="0.33"
+                      />
+                      <path
+                        d="M19.3677 28.9785L25.3677 22.9785L19.3677 16.9785"
+                        stroke="white"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -770,10 +970,101 @@ const PageEventCard = () => {
                   margin={30}
                   items={4}
                   autoplay
+                  loop={
+                    latestEvents.length < 4 ? (isMobile ? true : false) : true
+                  }
                   dots={false}
                   ref={latestEventCarousel as any}
                 >
-                  {lastestEventsEle()}
+                  {/* {lastestEventsEle()} */}
+                  {latestEvents.map((eventcardItem: any, i) => {
+                    return (
+                      <div
+                        key={`explorer_event_${i}`}
+                        className="card"
+                        style={{ marginLeft: 12 }}
+                      >
+                        <Link
+                          to={`/event/eventcard/${eventcardItem.id}`}
+                          className="card__cover"
+                        >
+                          <img
+                            src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventcardItem.picture_small}`}
+                            alt=""
+                          />
+                        </Link>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            width: "100%",
+                            paddingLeft: 20,
+                            paddingRight: 20,
+                          }}
+                        >
+                          <h3 className="explorer__card-title">
+                            <Link to={`/event/eventcard/${eventcardItem.id}`}>
+                              {eventcardItem.name}
+                            </Link>
+                          </h3>
+                          <div className="text__location">
+                            <div className="text__location-item">
+                              <p className="text__card-key">Collection</p>
+                              <div className="card__author">
+                                <img src="/img/avatars/avatar5.jpg" alt="" />
+                                <Link to="/author">cName</Link>
+                              </div>
+                            </div>
+                            <div className="text__location-item">
+                              <p className="text__card-key">Creator</p>
+                              <div className="card__author">
+                                {eventcardItem.creator.avatar ? (
+                                  <img
+                                    // src={`${config.API_BASE_URL}/api/upload/get_file?path=${eventCard.creator.avatar}`}
+                                    src={`${eventcardItem.creator.avatar}`}
+                                    alt=""
+                                  />
+                                ) : (
+                                  <img src="/img/avatars/avatar.jpg" alt="" />
+                                )}
+                                <Link to="/author">
+                                  {eventcardItem.creator.name}
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="card__explorer-info">
+                            <div className="card__price">
+                              <p className="text__location-key">
+                                Reserve price
+                              </p>
+                              <p className="text__location-price">
+                                {getEventPrice(eventcardItem)} €
+                              </p>
+                            </div>
+
+                            <button
+                              className="card__likes"
+                              type="button"
+                              onClick={() => onClickLike(i)}
+                            >
+                              {userInfo &&
+                              eventcardItem.likes_number &&
+                              eventcardItem.likes_number.includes(
+                                userInfo.user.id
+                              ) ? (
+                                <img src="/img/icons/liked_blue.svg" alt="" />
+                              ) : (
+                                <img src="/img/icons/liked_white.svg" alt="" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </OwlCarousel>
               </div>
             </div>
@@ -781,8 +1072,8 @@ const PageEventCard = () => {
             ""
           )}
         </section>
-      </div>
-    </main>
+      )}
+    </div>
   );
 };
 

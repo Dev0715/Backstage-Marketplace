@@ -47,4 +47,9 @@ export class ChangeProfileDto {
   @IsOptional()
   @IsString()
   wallet_address?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  wallet_address_near?: string;
 }

@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
-import { isMobile } from "react-device-detect";
-import { Link } from "react-router-dom";
-import { getAllEventCards, deleteEventCardById } from "../../../helper/event";
-import OwlCarousel from "react-owl-carousel";
 import "owl.carousel/dist/assets/owl.carousel.css";
 import "owl.carousel/dist/assets/owl.theme.default.css";
-import config from "../../../helper/config";
-import { useUserContext } from "../../../context/UserContext";
+import { useEffect, useRef, useState } from "react";
+import { isMobile } from "react-device-detect";
+import OwlCarousel from "react-owl-carousel";
+import { Link } from "react-router-dom";
 import DeletePopper from "../../../components/DeletePopper";
+import { useUserContext } from "../../../context/UserContext";
+import config from "../../../helper/config";
+import { deleteEventCardById, getAllEventCards } from "../../../helper/event";
+import { getEventPrice } from "../../../utils";
 
 const Explorers = () => {
   const { userInfo } = useUserContext();
@@ -39,15 +40,11 @@ const Explorers = () => {
 
   const eventsEle = () => {
     return events.map((eventcard: any, i) => {
-      const addons =
-        eventcard.addons === "" ? [] : JSON.parse(eventcard.addons);
-      let addonPrice = 0;
-      addons.forEach((addon: any) => {
-        addonPrice += Number(addon.price);
-      });
+      // const addons =
+      //   eventcard.addons === "" ? [] : JSON.parse(eventcard.addons);
       return (
         <div key={`event_${i}`} className="card">
-          {userInfo && userInfo.user.user_type == "ADMIN" ? (
+          {userInfo && userInfo.user.user_type === "ADMIN" ? (
             <DeletePopper
               setDeletePopupStatus={setDeletePopupStatus}
               onClickDelete={() => {
@@ -71,7 +68,14 @@ const Explorers = () => {
           </h3>
           <div className="card__author ">
             <div className="text__location">
-              <span>Date {eventcard.date}</span>
+              <span>
+                {`Date ${
+                  new Date(eventcard.date)
+                    .toISOString()
+                    .toString()
+                    .split("T")[0]
+                }`}
+              </span>
               <div>
                 <span>Location {eventcard.location}</span>
               </div>
@@ -80,14 +84,16 @@ const Explorers = () => {
           <div className="card__info">
             <div className="card__price">
               <span>Current price</span>
-              <span>{eventcard.price + addonPrice} € {/*€*/}</span>
+              <span>
+                {getEventPrice(eventcard)} € {/*€*/}
+              </span>
             </div>
 
             <button className="card__likes" type="button">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
               </svg>
-              <span>{eventcard.likes_number}</span>
+              <span>{Number(eventcard.likes_number)}</span>
             </button>
           </div>
         </div>

@@ -1,33 +1,33 @@
-import React, {Suspense, useEffect} from 'react';
-import logo from './logo.png';
-import './App.css';
-import './assets/scss/custom.scss';
-import View from './views';
-import { CookiesProvider } from 'react-cookie';
-import { ToastProvider } from 'react-toast-notifications';
+import { Suspense, useEffect } from "react";
+import { CookiesProvider } from "react-cookie";
+import { BrowserRouter } from "react-router-dom";
+import { ToastProvider } from "react-toast-notifications";
+import "./App.css";
+import "./assets/scss/custom.scss";
+import View from "./views";
 
-import AppContextProvider from './context/AppContext';
-import UserContextProvider from './context/UserContext';
-import TimeAgo from 'javascript-time-ago'
+import TimeAgo from "javascript-time-ago";
+import AppContextProvider from "./context/AppContext";
+import UserContextProvider from "./context/UserContext";
 
-import { Web3ReactProvider } from '@web3-react/core'
-import Web3 from 'web3'
-import { provider } from 'web3-core';
+import { Web3ReactProvider } from "@web3-react/core";
+import Web3 from "web3";
+import { provider } from "web3-core";
 
-import en from 'javascript-time-ago/locale/en.json'
-import ru from 'javascript-time-ago/locale/ru.json'
+import en from "javascript-time-ago/locale/en.json";
+import ru from "javascript-time-ago/locale/ru.json";
+import CookieConsent from "./components/cookieconsent";
 
-TimeAgo.addDefaultLocale(en)
-TimeAgo.addLocale(ru)
+TimeAgo.addDefaultLocale(en);
+TimeAgo.addLocale(ru);
 
 function getLibrary(provider: provider) {
-  return new Web3(provider)
+  return new Web3(provider);
 }
 
 function App() {
-
   useEffect(() => {
-    document.title = 'NFT Marketplace';
+    document.title = "NFT Marketplace";
   }, []);
 
   return (
@@ -38,18 +38,20 @@ function App() {
         placement="top-right"
       >
         <CookiesProvider>
-            <AppContextProvider>
-              <UserContextProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <Suspense fallback={null}>
+          <AppContextProvider>
+            <UserContextProvider>
+              <Web3ReactProvider getLibrary={getLibrary}>
+                <Suspense fallback={null}>
+                  <BrowserRouter>
                     <View />
-                  </Suspense>
-                </Web3ReactProvider>
-              </UserContextProvider>
-            </AppContextProvider>
-          </CookiesProvider>
+                  </BrowserRouter>
+                  <CookieConsent />
+                </Suspense>
+              </Web3ReactProvider>
+            </UserContextProvider>
+          </AppContextProvider>
+        </CookiesProvider>
       </ToastProvider>
-      
     </div>
   );
 }

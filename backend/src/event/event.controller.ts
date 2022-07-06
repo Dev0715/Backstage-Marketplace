@@ -29,6 +29,17 @@ import { CreateEventCardDto } from './dtos/create_event_card.dto';
 import { CreateTicketDto } from './dtos/create_tickdt.dto';
 import { Ticket } from './entities/ticket.entity';
 import { CollectionDto } from './dtos/collection.dto';
+import { diskStorage } from 'multer';
+
+const editFileName = (req, file, callback) => {
+  const uploadedName = file.originalname.split('.');
+  const largefileName =
+    randomstring.generate({
+      length: 16,
+      charset: 'alphabetic',
+    }) + `.${uploadedName[uploadedName.length - 1]}`;
+  callback(null, `${largefileName}`);
+};
 
 @Controller('api/event')
 @ApiTags('Event')
@@ -119,10 +130,18 @@ export class EventController {
 
   @Post('create_eventcard')
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'large_image', maxCount: 1 },
-      { name: 'small_image', maxCount: 1 },
-    ]),
+    FileFieldsInterceptor(
+      [
+        { name: 'large_image', maxCount: 1 },
+        { name: 'small_image', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: 'assets/uploads/eventcards/',
+          filename: editFileName,
+        }),
+      },
+    ),
   )
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({})
@@ -136,21 +155,26 @@ export class EventController {
     @Request() req,
   ) {
     try {
-      const largefileName =
-        randomstring.generate({
-          length: 16,
-          charset: 'alphabetic',
-        }) + '.jpg';
-
-      const smallfileName =
-        randomstring.generate({
-          length: 16,
-          charset: 'alphabetic',
-        }) + '.jpg';
-      const large_path = 'assets/uploads/eventcards/' + largefileName;
-      const small_path = 'assets/uploads/eventcards/' + smallfileName;
-      await this.uploadService.upload(large_path, files.large_image[0]);
-      await this.uploadService.upload(small_path, files.small_image[0]);
+      // const uploadedName = files.large_image[0].originalname.split('.');
+      // console.log(uploadedName);
+      // const largefileName =
+      //   randomstring.generate({
+      //     length: 16,
+      //     charset: 'alphabetic',
+      //   }) + `.${uploadedName[uploadedName.length - 1]}`;
+      // console.log(largefileName);
+      // const smallfileName =
+      //   randomstring.generate({
+      //     length: 16,
+      //     charset: 'alphabetic',
+      //   }) + '.jpg';
+      // const large_path = 'assets/uploads/eventcards/' + largefileName;
+      // const small_path = 'assets/uploads/eventcards/' + smallfileName;
+      console.log(files);
+      // await this.uploadService.upload(large_path, files.large_image[0]);
+      // await this.uploadService.upload(small_path, files.small_image[0]);
+      const large_path = 'assets/uploads/eventcards/' + files.large_image[0].filename;
+      const small_path = 'assets/uploads/eventcards/' + files.small_image[0].filename;
       const eventCard = await this.eventService.createEventCard({
         picture_large: large_path,
         picture_small: small_path,
@@ -271,6 +295,18 @@ export class EventController {
     );
     console.log(body);
     return { success: true, ticket: ticket };
+  }
+
+  @Post('eventcard_multi/update_like')
+  @UseGuards(JwtAuthGuard)
+  @ApiOkResponse({})
+  async update_event_like(@Body() body: any, @Request() req) {
+    const event = await this.eventService.updateEventLike(
+      body.id,
+      body.likes_number,
+    );
+    console.log(body);
+    return { success: true, event };
   }
 
   @Get('eventcard_multi/available_events')
